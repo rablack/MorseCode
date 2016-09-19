@@ -58,7 +58,7 @@ test(AtoM)
 test(NtoZ)
 {
   String letters = "NOPQRSTUVWXYZ";
-  String expected = ".- --- .--. --.- .-. ... - ..- ...- .-- -..- -.-- --..";
+  String expected = "-. --- .--. --.- .-. ... - ..- ...- .-- -..- -.-- --..";
   String encoded = MorseCode::encode(letters);
   assertEqual(expected, encoded);  
 }
