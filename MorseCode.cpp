@@ -14,9 +14,10 @@
 #define MORSE_ENTRY(CHAR,MORSESEQ) case (CHAR): encoded += F(MORSESEQ); break;
 
 // Encode a string into a morse sequence
-String MorseCode::encode(String message)
+bool MorseCode::encode(String& encoded, const String message)
 {
-  String encoded = "";
+  // encoded = "";
+  bool result = true;
 
   // Add a space between sequences for each letter
   for (int i = 0; i < message.length(); i++) {
@@ -96,7 +97,13 @@ String MorseCode::encode(String message)
       // messages have at least a space's gap between them (the length of
       // 7 dots).
       MORSE_ENTRY(' ', " ");
+
+    default:
+      // The character is unrecognised so set the result to false to
+      // indicate failure. Also transmit the morse error sequence (8 dots).
+      result = false;
+      encoded += F("........");
     }
   }
-  return encoded;
+  return result;
 }

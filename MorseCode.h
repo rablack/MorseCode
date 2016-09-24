@@ -18,7 +18,7 @@ class String;
 class MorseCode
 {
 public:
-  static String encode(String text);
+  static bool encode(String& result, const String text);
 };
 
 #endif /* MorseCode_h */
