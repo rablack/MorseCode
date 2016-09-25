@@ -18,7 +18,21 @@ class String;
 class MorseCode
 {
 public:
-  static bool encode(String& result, const String text);
+  // Options for dealing with invalid characters
+  enum InvalidChar
+  {
+    IgnoreChar, // Don't output anything
+    TransmitErrorCode // Output the morse error sequence (8 dots)
+  };
+
+  MorseCode(InvalidChar behavior = TransmitErrorCode);
+
+  bool encode(String& result, const String text);
+  void setInvalidCharBehavior(InvalidChar newBehavior);
+  InvalidChar getInvalidCharBehavior(void) const;
+
+private:
+  InvalidChar invalidCharBehavior;
 };
 
 #endif /* MorseCode_h */

@@ -17,7 +17,9 @@ test(encodeHelloWorld)
   String text = "Hello World";
   String expected = ".... . .-.. .-.. ---   .-- --- .-. .-.. -..";
   String encoded;
-  bool success = MorseCode::encode(encoded, text);
+  MorseCode morse;
+  
+  bool success = morse.encode(encoded, text);
   assertTrue(success);
   assertEqual(expected, encoded);
 }
@@ -28,9 +30,20 @@ test(encodeHelloError)
   String text = "Hello!";
   String encoded;
   MorseCode morse;
+  String expected = ".... . .-.. .-.. --- ........";
 
   bool success = morse.encode(encoded, text);
   assertFalse(success);
+  assertEqual(expected, encoded);
+
+  // Switch the morse class into ignore character mode
+
+  morse.setInvalidCharBehavior(MorseCode::IgnoreChar);
+
+  String expected2 = ".... . .-.. .-.. ---";
+  bool success2 = morse.encode(encoded, text);
+  assertFalse(success2);
+  assertEqual(expected2, encoded);
 }
 
 // Morse code ignores the case of letters. Test that encoding a string ignores the case.
@@ -53,8 +66,9 @@ test(encodeIgnoreCase)
     lowerSnippet.toLowerCase();
 
     String upperMorse, lowerMorse;
-    bool upperSuccess = MorseCode::encode(upperMorse, upperSnippet);
-    bool lowerSuccess = MorseCode::encode(lowerMorse, lowerSnippet);
+    MorseCode morse;
+    bool upperSuccess = morse.encode(upperMorse, upperSnippet);
+    bool lowerSuccess = morse.encode(lowerMorse, lowerSnippet);
     assertTrue(upperSuccess);
     assertTrue(lowerSuccess);
     assertEqual(lowerMorse, upperMorse);
@@ -67,7 +81,9 @@ test(AtoM)
   String letters = "ABCDEFGHIJKLM";
   String expected = ".- -... -.-. -.. . ..-. --. .... .. .--- -.- .-.. --";
   String encoded;
-  bool success = MorseCode::encode(encoded, letters);
+  MorseCode morse;
+  
+  bool success = morse.encode(encoded, letters);
   assertTrue(success);
   assertEqual(expected, encoded);  
 }
@@ -78,7 +94,9 @@ test(NtoZ)
   String letters = "NOPQRSTUVWXYZ";
   String expected = "-. --- .--. --.- .-. ... - ..- ...- .-- -..- -.-- --..";
   String encoded;
-  bool success = MorseCode::encode(encoded, letters);
+  MorseCode morse;
+  
+  bool success = morse.encode(encoded, letters);
   assertTrue(success);
   assertEqual(expected, encoded);  
 }
@@ -89,14 +107,17 @@ test(punctuation)
   String punc1 = ".,:?'-/()\"";
   String expected1 = ".-.-.- --..-- ---... ..--.. .----. -....- -..-. -.--. -.--.- .-..-.";
   String encoded1;
-  bool success1 = MorseCode::encode(encoded1, punc1);
+  MorseCode morse;
+  
+  bool success1 = morse.encode(encoded1, punc1);
   assertTrue(success1);
   assertEqual(expected1, encoded1);
   
   String punc2 = "=+*@";
   String expected2 = "-...- .-.-. -..- .--.-.";
   String encoded2;
-  bool success2 = MorseCode::encode(encoded2, punc2);
+  
+  bool success2 = morse.encode(encoded2, punc2);
   assertTrue(success2);
   assertEqual(expected2, encoded2);
 }
@@ -142,7 +163,9 @@ test(encodeDigit)
     
     String message = String(digit);
     String encoded;
-    bool success = MorseCode::encode(encoded, message);
+    MorseCode morse;
+    
+    bool success = morse.encode(encoded, message);
     assertTrue(success);
     assertEqual(expected, encoded);
   } // for digit

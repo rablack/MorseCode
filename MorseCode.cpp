@@ -10,13 +10,18 @@
 #include "MorseCode.h"
 #include "Arduino.h"
 
+MorseCode::MorseCode(InvalidChar behavior) : invalidCharBehavior(behavior)
+{
+  // Nothing else to do
+}
+
 // Entry in a switch statement to encode a character into a morse sequence
 #define MORSE_ENTRY(CHAR,MORSESEQ) case (CHAR): encoded += F(MORSESEQ); break;
 
 // Encode a string into a morse sequence
 bool MorseCode::encode(String& encoded, const String message)
 {
-  // encoded = "";
+  encoded = "";
   bool result = true;
 
   // Add a space between sequences for each letter
@@ -100,10 +105,37 @@ bool MorseCode::encode(String& encoded, const String message)
 
     default:
       // The character is unrecognised so set the result to false to
-      // indicate failure. Also transmit the morse error sequence (8 dots).
+      // indicate failure.
       result = false;
-      encoded += F("........");
+
+      // If appropriate transmit the morse error sequence (8 dots).
+      // Otherwise remove the trailing inter-letter space (if it exists).
+      if (this->getInvalidCharBehavior() == TransmitErrorCode) {
+        encoded += F("........");
+      } else {
+        int length = encoded.length();
+        if (length > 0) {
+          encoded.remove(length - 1);
+        } 
+      }
     }
   }
   return result;
+}
+
+// Setter method for invalidCharBehavior
+//
+// Changes the behavior when an invalid character is encountered.
+void MorseCode::setInvalidCharBehavior(InvalidChar behavior)
+{
+  invalidCharBehavior = behavior;
+}
+
+// Getter method for invalidCharBehavior
+//
+// returns the currently configured behavior for what to do when encountering
+// an invalid character.
+MorseCode::InvalidChar MorseCode::getInvalidCharBehavior(void) const
+{
+  return invalidCharBehavior;
 }
