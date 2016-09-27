@@ -18,6 +18,7 @@
 class MorseCodeOutput
 {
 public:
+  virtual ~MorseCodeOuput(void) { /* do nothing */ }
   virtual bool write(uint8_t value) = 0;
 };
 
