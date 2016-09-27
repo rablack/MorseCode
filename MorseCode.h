@@ -31,6 +31,7 @@ public:
             InvalidChar behavior = TransmitErrorCode);
 
   bool write(const String& message);
+  bool sendCode(const String& code);
   bool encode(String& result, const String text);
   void setInvalidCharBehavior(InvalidChar newBehavior);
   InvalidChar getInvalidCharBehavior(void) const;

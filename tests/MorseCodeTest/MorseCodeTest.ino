@@ -15,7 +15,7 @@
 // This is deliberately a struct because the test cases need access to the internals
 struct MockMorseCodeOutput : public MorseCodeOutput
 {
-  MockMorseCodeOutput() : flashes(0), successFlag(true), lastValue(LOW) {}
+  MockMorseCodeOutput(void) : flashes(0), successFlag(true), lastValue(LOW) {}
 
   // Count the number of calls with a HIGH value: the total number of dots
   // and dashes in the message.
@@ -103,7 +103,7 @@ test(encodeIgnoreCase)
 }
 
 // Test the encoding of the letters A-M against hand-coded morse code
-test(AtoM)
+test(encodeAtoM)
 {
   String letters = "ABCDEFGHIJKLM";
   String expected = ".- -... -.-. -.. . ..-. --. .... .. .--- -.- .-.. --";
@@ -116,7 +116,7 @@ test(AtoM)
 }
 
 // Test the encoding of the letters N-Z against hand-coded morse code
-test(NtoZ)
+test(encodeNtoZ)
 {
   String letters = "NOPQRSTUVWXYZ";
   String expected = "-. --- .--. --.- .-. ... - ..- ...- .-- -..- -.-- --..";
@@ -129,7 +129,7 @@ test(NtoZ)
 }
 
 // Test the encoding of punctuation
-test(punctuation)
+test(encodePunctuation)
 {
   String punc1 = ".,:?'-/()\"";
   String expected1 = ".-.-.- --..-- ---... ..--.. .----. -....- -..-. -.--. -.--.- .-..-.";
@@ -198,35 +198,35 @@ test(encodeDigit)
   } // for digit
 }
 
-// Count the number of flashes output by the message "Hello".
-test(writeCountFlashes)
+// Count the number of flashes output by the code "--. .".
+test(sendCodeCountFlashes)
 {
-  String message = "Hello";
-  int expectedFlashes = 16;
+  String code = "--. .";
+  int expectedFlashes = 4;
   uint8_t expectedLastValue = LOW;
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
 
-  bool success = morse.write(message);
+  bool success = morse.sendCode(code);
   assertTrue(success);
   assertEqual(expectedFlashes, mockOutput.flashes);
   assertEqual(expectedLastValue, mockOutput.lastValue);
 }
 
-// Verify that when calling MorseCode::write(), a success from the output object
+// Verify that when calling MorseCode::sendCode(), a success from the output object
 // results in success, and an error from the output object results in failure.
-test(writeOutputFailure)
+test(sendCodeOutputFailure)
 {
-  String message = "SOS";
+  String code = "..";
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
 
-  bool success = morse.write(message);
+  bool success = morse.sendCode(code);
   assertTrue(success);
   
   mockOutput.successFlag = false;
 
-  success = morse.write(message);
+  success = morse.sendCode(code);
   assertFalse(success);
 }
 
