@@ -10,9 +10,69 @@
 #include "MorseCode.h"
 #include "Arduino.h"
 
-MorseCode::MorseCode(InvalidChar behavior) : invalidCharBehavior(behavior)
+const int MORSE_GAP_LENGTH = 250;
+const int MORSE_DASH_LENGTH = 250;
+const int MORSE_DOT_LENGTH = 750;
+
+//==== Constructors and destructors ====
+MorseCode::MorseCode(MorseCodeOutput* morseOutput, InvalidChar behavior) :
+  output(morseOutput),
+  invalidCharBehavior(behavior)
 {
   // Nothing else to do
+}
+
+//==== Methods====
+
+// Write a message in morse code on the output.
+//
+// Normally I wouldn't write this method like this because it is untestable.
+// I did this deliberately to make the point that getting into the habit of
+// unit-testing affects how you write code, and this is a good thing.
+//
+// return true for success, false for failure. Note that this is inconsistent with
+// the normal convention of write() returning the number of characters written. When
+// this is refactored to cope with non-blocking writes the interface will have to change.
+bool MorseCode::write(const String& message)
+{
+  String encoded;
+  // encode() is independently testable.
+  bool result = this->encode(encoded, message);
+
+  // The following section cannot be tested independently from the rest of the method
+  // The output interface also defines "correct behaviour" in terms of timing. This is
+  // unnecessarily hard to test.
+  if (this->output != NULL) {
+    for (int i = 0; i < encoded.length(); i++) {
+      switch(encoded.charAt(i)) {
+      case '-':
+        output->write(HIGH);
+        delay(MORSE_DASH_LENGTH);
+        break;
+
+      case '.':
+        output->write(HIGH);
+        delay(MORSE_DOT_LENGTH);
+        break;
+
+      case ' ':
+        output->write(LOW);
+        delay(MORSE_GAP_LENGTH);
+        break;
+
+      default:
+        result = false;
+
+      }
+      // Output inter-signal gap.
+      output->write(LOW);
+      delay(MORSE_GAP_LENGTH);
+    }
+  } else {
+    // No output to write to. Return false to indicate an error.
+    result = false;
+  }
+  return result;
 }
 
 // Entry in a switch statement to encode a character into a morse sequence

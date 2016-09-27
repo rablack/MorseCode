@@ -11,13 +11,40 @@
 
 #include "MorseCode.h"
 
+// Mock object to test the interface between MorseCode and MorseCodeOutput
+// This is deliberately a struct because the test cases need access to the internals
+struct MockMorseCodeOutput : public MorseCodeOutput
+{
+  MockMorseCodeOutput() : flashes(0), successFlag(true), lastValue(LOW) {}
+
+  // Count the number of calls with a HIGH value: the total number of dots
+  // and dashes in the message.
+  // Store the value passed in the lastValue data member.
+  // Return successFlag to indicate either success or failure.
+  bool write(uint8_t value)
+  {
+    if (value == HIGH)
+    {
+      flashes++;
+    }
+    lastValue = value;
+    return successFlag;
+  }
+  
+  int flashes; // Current count of the number of HIGH signals since object creation
+  bool successFlag; // If this is set to false, flag a failure
+  uint8_t lastValue; // The last value passed to the write() method.
+};
+
+MorseCodeOutputPin morsePin(13);
+
 // Test the encoding of the message "Hello World" against hand-encoded morse code
 test(encodeHelloWorld)
 {
   String text = "Hello World";
   String expected = ".... . .-.. .-.. ---   .-- --- .-. .-.. -..";
   String encoded;
-  MorseCode morse;
+  MorseCode morse(&morsePin);
   
   bool success = morse.encode(encoded, text);
   assertTrue(success);
@@ -29,7 +56,7 @@ test(encodeHelloError)
 {
   String text = "Hello!";
   String encoded;
-  MorseCode morse;
+  MorseCode morse(&morsePin);
   String expected = ".... . .-.. .-.. --- ........";
 
   bool success = morse.encode(encoded, text);
@@ -66,7 +93,7 @@ test(encodeIgnoreCase)
     lowerSnippet.toLowerCase();
 
     String upperMorse, lowerMorse;
-    MorseCode morse;
+    MorseCode morse(&morsePin);
     bool upperSuccess = morse.encode(upperMorse, upperSnippet);
     bool lowerSuccess = morse.encode(lowerMorse, lowerSnippet);
     assertTrue(upperSuccess);
@@ -81,7 +108,7 @@ test(AtoM)
   String letters = "ABCDEFGHIJKLM";
   String expected = ".- -... -.-. -.. . ..-. --. .... .. .--- -.- .-.. --";
   String encoded;
-  MorseCode morse;
+  MorseCode morse(&morsePin);
   
   bool success = morse.encode(encoded, letters);
   assertTrue(success);
@@ -94,7 +121,7 @@ test(NtoZ)
   String letters = "NOPQRSTUVWXYZ";
   String expected = "-. --- .--. --.- .-. ... - ..- ...- .-- -..- -.-- --..";
   String encoded;
-  MorseCode morse;
+  MorseCode morse(&morsePin);
   
   bool success = morse.encode(encoded, letters);
   assertTrue(success);
@@ -107,7 +134,7 @@ test(punctuation)
   String punc1 = ".,:?'-/()\"";
   String expected1 = ".-.-.- --..-- ---... ..--.. .----. -....- -..-. -.--. -.--.- .-..-.";
   String encoded1;
-  MorseCode morse;
+  MorseCode morse(&morsePin);
   
   bool success1 = morse.encode(encoded1, punc1);
   assertTrue(success1);
@@ -163,12 +190,57 @@ test(encodeDigit)
     
     String message = String(digit);
     String encoded;
-    MorseCode morse;
+    MorseCode morse(&morsePin);
     
     bool success = morse.encode(encoded, message);
     assertTrue(success);
     assertEqual(expected, encoded);
   } // for digit
+}
+
+// Count the number of flashes output by the message "Hello".
+test(writeCountFlashes)
+{
+  String message = "Hello";
+  int expectedFlashes = 16;
+  uint8_t expectedLastValue = LOW;
+  MockMorseCodeOutput mockOutput;
+  MorseCode morse(&mockOutput);
+
+  bool success = morse.write(message);
+  assertTrue(success);
+  assertEqual(expectedFlashes, mockOutput.flashes);
+  assertEqual(expectedLastValue, mockOutput.lastValue);
+}
+
+// Verify that when calling MorseCode::write(), a success from the output object
+// results in success, and an error from the output object results in failure.
+test(writeOutputFailure)
+{
+  String message = "SOS";
+  MockMorseCodeOutput mockOutput;
+  MorseCode morse(&mockOutput);
+
+  bool success = morse.write(message);
+  assertTrue(success);
+  
+  mockOutput.successFlag = false;
+
+  success = morse.write(message);
+  assertFalse(success);
+}
+
+// Check that an invalid character causes MorseCode::write() to fail.
+test(writeHelloError)
+{
+  String message = "Hello!";
+
+  MockMorseCodeOutput mockOutput;
+  MorseCode morse(&mockOutput);
+
+  bool success = morse.write(message);
+
+  assertFalse(success);
 }
 
 void setup() {
