@@ -29,9 +29,10 @@ public:
 
   MorseCode(MorseCodeOutput* morseOutput,
             InvalidChar behavior = TransmitErrorCode);
+  virtual ~MorseCode(void) { /* Nothing to do */ }
 
   bool write(const String& message);
-  bool sendCode(const String& code);
+  virtual bool sendCode(const String& code);
   bool encode(String& result, const String text);
   void setInvalidCharBehavior(InvalidChar newBehavior);
   InvalidChar getInvalidCharBehavior(void) const;

@@ -35,6 +35,9 @@ bool MorseCode::write(const String& message)
   // encode() is independently testable.
   bool result = this->encode(encoded, message);
   
+  // Note the use of bitwise &= as opposed to logical &&= to avoid lazy evaluation.
+  // The currently defined behavior is that sendCode() should be called
+  // regardless of the value of result.
   result &= this->sendCode(encoded);
   
   return result;

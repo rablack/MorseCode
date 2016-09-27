@@ -36,6 +36,24 @@ struct MockMorseCodeOutput : public MorseCodeOutput
   uint8_t lastValue; // The last value passed to the write() method.
 };
 
+// Mock method to test the interface between MorseCode::write() and MorseCode::sendCode()
+struct MockSendCode : public MorseCode
+{
+  MockSendCode(MorseCodeOutput* morseOutput = NULL,
+               InvalidChar behavior = TransmitErrorCode)
+    : MorseCode(morseOutput, behavior), mockLastCode(""), mockSuccessFlag(true)
+  { /* Nothing to do */ }
+
+  bool sendCode(const String& code)
+  {
+    mockLastCode = code;
+    return mockSuccessFlag;
+  }
+
+  String mockLastCode;
+  bool mockSuccessFlag;
+};
+
 MorseCodeOutputPin morsePin(13);
 
 // Test the encoding of the message "Hello World" against hand-encoded morse code
@@ -234,13 +252,37 @@ test(sendCodeOutputFailure)
 test(writeHelloError)
 {
   String message = "Hello!";
+  String expectedCode = ".... . .-.. .-.. --- ........";
 
-  MockMorseCodeOutput mockOutput;
-  MorseCode morse(&mockOutput);
+  MockSendCode morse;
 
   bool success = morse.write(message);
 
   assertFalse(success);
+  assertEqual(expectedCode, morse.mockLastCode);
+}
+
+// Check that an error from the sendCode() method results in a fail.
+test(writeSendError)
+{
+  String message = "Hello";
+  String expectedCode = ".... . .-.. .-.. ---";
+
+  MockSendCode morse;
+
+  morse.mockSuccessFlag = false;
+
+  bool success = morse.write(message);
+
+  assertFalse(success);
+  assertEqual(expectedCode, morse.mockLastCode);
+
+  morse.mockSuccessFlag = true;
+
+  success = morse.write(message);
+
+  assertTrue(success);
+  assertEqual(expectedCode, morse.mockLastCode);
 }
 
 void setup() {
