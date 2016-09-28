@@ -19,11 +19,13 @@
 class MorseCodeOutputPin : public MorseCodeOutput
 {
 public:
-  MorseCodeOutputPin(uint8_t pinNumber);
+  MorseCodeOutputPin(uint8_t pinNumber, unsigned int _msPerTick = 250);
   bool write(uint8_t value);
+  bool writeWithLength(uint8_t value, unsigned int length);
 
 private:
   uint8_t pin;
+  unsigned int msPerTick;
 };
 
 #endif /* MorseCode_h */

@@ -15,25 +15,39 @@
 // This is deliberately a struct because the test cases need access to the internals
 struct MockMorseCodeOutput : public MorseCodeOutput
 {
-  MockMorseCodeOutput(void) : flashes(0), successFlag(true), lastValue(LOW) {}
+  MockMorseCodeOutput(void)
+    : flashes(0), successFlag(true), lastValue(LOW), outputStream("") {}
 
+  // This should never be called so always fail
+  bool write(uint8_t value)
+  {
+    return false;
+  }
+  
   // Count the number of calls with a HIGH value: the total number of dots
   // and dashes in the message.
   // Store the value passed in the lastValue data member.
   // Return successFlag to indicate either success or failure.
-  bool write(uint8_t value)
+  bool writeWithLength(uint8_t value, unsigned int length)
   {
     if (value == HIGH)
     {
       flashes++;
     }
     lastValue = value;
-    return successFlag;
+    
+    char c = (value == HIGH) ? '1' : '0';
+    
+    for (unsigned int i = 0; i < length; i++) {
+      outputStream += c;
+    }
+    return successFlag;  
   }
   
   int flashes; // Current count of the number of HIGH signals since object creation
   bool successFlag; // If this is set to false, flag a failure
   uint8_t lastValue; // The last value passed to the write() method.
+  String outputStream;
 };
 
 // Mock method to test the interface between MorseCode::write() and MorseCode::sendCode()
@@ -222,6 +236,8 @@ test(sendCodeCountFlashes)
   String code = "--. .";
   int expectedFlashes = 4;
   uint8_t expectedLastValue = LOW;
+  // Note that we always end with a LOW when the LED gets turned off.
+  String expectedOutputStream = "11101110100010";
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
 
@@ -229,6 +245,7 @@ test(sendCodeCountFlashes)
   assertTrue(success);
   assertEqual(expectedFlashes, mockOutput.flashes);
   assertEqual(expectedLastValue, mockOutput.lastValue);
+  assertEqual(expectedOutputStream, mockOutput.outputStream);
 }
 
 // Verify that when calling MorseCode::sendCode(), a success from the output object
@@ -238,14 +255,18 @@ test(sendCodeOutputFailure)
   String code = "..";
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
+  String expectedOutputStream = "1010";
 
   bool success = morse.sendCode(code);
   assertTrue(success);
+  assertEqual(expectedOutputStream, mockOutput.outputStream);
   
   mockOutput.successFlag = false;
+  expectedOutputStream += "1010";
 
   success = morse.sendCode(code);
   assertFalse(success);
+  assertEqual(expectedOutputStream, mockOutput.outputStream);
 }
 
 // Check that an invalid character causes MorseCode::write() to fail.
@@ -283,6 +304,23 @@ test(writeSendError)
 
   assertTrue(success);
   assertEqual(expectedCode, morse.mockLastCode);
+}
+
+// Verify that spaces are the correct length
+// Inter-signal spaces are 1 dot long
+// Inter-letter spaces are 3 dots long
+// Inter-word spaces are 7 dots long
+test(writeSpacing)
+{
+  String message = "ab cd";
+  String expectedOutput = "1011100011101010100000001110101110100011101010";
+
+  MockMorseCodeOutput mockOutput;
+  MorseCode morse(&mockOutput);
+
+  bool success = morse.write(message);
+  assertTrue(success);
+  assertEqual(expectedOutput, mockOutput.outputStream);
 }
 
 void setup() {

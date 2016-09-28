@@ -18,8 +18,9 @@
 class MorseCodeOutput
 {
 public:
-  virtual ~MorseCodeOuput(void) { /* do nothing */ }
+  virtual ~MorseCodeOutput(void) { /* do nothing */ }
   virtual bool write(uint8_t value) = 0;
+  virtual bool writeWithLength(uint8_t value, unsigned int ticks) = 0;
 };
 
 #endif /* MorseCode_h */

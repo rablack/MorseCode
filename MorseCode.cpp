@@ -10,9 +10,8 @@
 #include "MorseCode.h"
 #include "Arduino.h"
 
-const int MORSE_GAP_LENGTH = 250;
-const int MORSE_DASH_LENGTH = 250;
-const int MORSE_DOT_LENGTH = 750;
+const int MORSE_DASH_TICKS = 3;
+const int MORSE_DOT_TICKS = 1;
 
 //==== Constructors and destructors ====
 MorseCode::MorseCode(MorseCodeOutput* morseOutput, InvalidChar behavior) :
@@ -35,7 +34,7 @@ bool MorseCode::write(const String& message)
   // encode() is independently testable.
   bool result = this->encode(encoded, message);
   
-  // Note the use of bitwise &= as opposed to logical &&= to avoid lazy evaluation.
+  // Note the use of bitwise &= as opposed to logical && to avoid lazy evaluation.
   // The currently defined behavior is that sendCode() should be called
   // regardless of the value of result.
   result &= this->sendCode(encoded);
@@ -54,29 +53,25 @@ bool MorseCode::sendCode(const String& code)
   // of output->write()
   if (this->output != NULL) {
     for (int i = 0; i < code.length(); i++) {
+      bool success = false; // Was outputting this character successful?
       switch(code.charAt(i)) {
       case '-':
-        output->write(HIGH);
-        delay(MORSE_DASH_LENGTH);
+        success = output->writeWithLength(HIGH, MORSE_DASH_TICKS);
         break;
 
       case '.':
-        output->write(HIGH);
-        delay(MORSE_DOT_LENGTH);
+        success = output->writeWithLength(HIGH, MORSE_DOT_TICKS);
         break;
 
       case ' ':
-        output->write(LOW);
-        delay(MORSE_GAP_LENGTH);
+        success = output->writeWithLength(LOW, MORSE_DOT_TICKS);
         break;
-
-      default:
-        result = false;
-
       }
       // Output inter-signal gap.
-      output->write(LOW);
-      delay(MORSE_GAP_LENGTH);
+      if (!output->writeWithLength(LOW, MORSE_DOT_TICKS)) {
+        result = false;
+      }
+      result = result && success;
     }
   } else {
     // No output to write to. Return false to indicate an error.
