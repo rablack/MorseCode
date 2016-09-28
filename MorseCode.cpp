@@ -43,18 +43,24 @@ bool MorseCode::write(const String& message)
 }
 
 // Send a sequence of dots and dashes to the output object.
+// This method adds an inter-letter space to the end of every non-empty sequence.
 bool MorseCode::sendCode(const String& code)
 {
   bool result = true;
+  String spacedCode = code;
+  // Add inter-letter space, if needed.
+  if (code.length() > 0) {
+    spacedCode += " ";
+  }
   
   // The following section defines "correct behaviour" in terms of timing. This is
   // unnecessarily hard to test.
   // It also contains a bug that it does not take any notice of the return value
   // of output->write()
   if (this->output != NULL) {
-    for (int i = 0; i < code.length(); i++) {
+    for (int i = 0; i < spacedCode.length(); i++) {
       bool success = false; // Was outputting this character successful?
-      switch(code.charAt(i)) {
+      switch(spacedCode.charAt(i)) {
       case '-':
         success = output->writeWithLength(HIGH, MORSE_DASH_TICKS);
         break;

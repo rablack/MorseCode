@@ -236,8 +236,9 @@ test(sendCodeCountFlashes)
   String code = "--. .";
   int expectedFlashes = 4;
   uint8_t expectedLastValue = LOW;
-  // Note that we always end with a LOW when the LED gets turned off.
-  String expectedOutputStream = "11101110100010";
+  // Note that we always end with an inter-letter space (000)
+  // ready for the next letter.
+  String expectedOutputStream = "1110111010001000";
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
 
@@ -255,14 +256,14 @@ test(sendCodeOutputFailure)
   String code = "..";
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
-  String expectedOutputStream = "1010";
+  String expectedOutputStream = "101000";
 
   bool success = morse.sendCode(code);
   assertTrue(success);
   assertEqual(expectedOutputStream, mockOutput.outputStream);
   
   mockOutput.successFlag = false;
-  expectedOutputStream += "1010";
+  expectedOutputStream += "101000";
 
   success = morse.sendCode(code);
   assertFalse(success);
@@ -313,7 +314,7 @@ test(writeSendError)
 test(writeSpacing)
 {
   String message = "ab cd";
-  String expectedOutput = "1011100011101010100000001110101110100011101010";
+  String expectedOutput = "101110001110101010000000111010111010001110101000";
 
   MockMorseCodeOutput mockOutput;
   MorseCode morse(&mockOutput);
@@ -321,6 +322,40 @@ test(writeSpacing)
   bool success = morse.write(message);
   assertTrue(success);
   assertEqual(expectedOutput, mockOutput.outputStream);
+}
+
+// Make sure that multiple writes end up with the same spacing as a single write.
+test(writeMultiple)
+{
+  String part1 = "ab ";
+  String part2 = "cd";
+  String expectedOutput = "101110001110101010000000111010111010001110101000";
+
+  MockMorseCodeOutput mockOutput;
+  MorseCode morse(&mockOutput);
+
+  bool success = morse.write(part1);
+  assertTrue(success);
+  
+  success = morse.write(part2);
+  assertTrue(success);
+  
+  assertEqual(expectedOutput, mockOutput.outputStream);
+}
+
+// Test that the empty case works, returns success and generates no added spaces
+test(writeEmpty)
+{
+  String message = "";
+  String expectedOutput = "";
+
+  MockMorseCodeOutput mockOutput;
+  MorseCode morse(&mockOutput);
+
+  bool success = morse.write(message);
+  assertTrue(success);
+  
+  assertEqual(expectedOutput, mockOutput.outputStream); 
 }
 
 void setup() {
